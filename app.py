@@ -15,14 +15,14 @@ from linebot.v3.messaging import (
     MessagingApi,
     ReplyMessageRequest,
     TextMessage,
-    
-    
+    StickerMessage
 )
 
 import os
 from linebot.v3.webhooks import (
     MessageEvent,
-    TextMessageContent
+    TextMessageContent,
+    StickerMessageContent
 )
 
 app = Flask(__name__)
@@ -66,6 +66,28 @@ def handle_message(event):
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[bot_msg]
+            )
+        )
+
+@handler.add(MessageEvent, message=StickerMessageContent)
+def handle_sticker_message(event):
+    with ApiClient(configuration) as api_client:
+        # 當使用者傳入貼圖時
+        line_bot_api = MessagingApi(api_client)
+        sticker_id = event.message.sticker_id
+        package_id = event.message.package_id
+        keywords = ", ".join(event.message.keywords)
+        # 可以使用的貼圖清單
+        # https://developers.line.biz/en/docs/messaging-api/sticker-list/
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    StickerMessage(package_id="6325", sticker_id="10979904"),
+                    TextMessage(text=f"You just sent a sticker. Here is the information of the sticker:"),
+                    TextMessage(text=f"package_id is {package_id}, sticker_id is {sticker_id}."),
+                    TextMessage(text=f"The keywords are {keywords}."),
+                ]
             )
         )
 
